@@ -75,9 +75,9 @@ const commands = {
     contact: "Email: avi@example.com | LinkedIn: https://linkedin.com/in/avi",
     clear: function() { output.innerHTML = ''; return ''; },
     github: async function() {
-        const user = 'octocat'; // <-- Replace with your GitHub username
+        const levelbylevel = 'octocat'; // <-- Replace with your GitHub levelbylevelname
         try {
-            const res = await fetch(`https://api.github.com/users/${user}/repos`);
+            const res = await fetch(`https://api.github.com/levelbylevels/${levelbylevel}/repos`);
             const data = await res.json();
             let list = "<p>GitHub Repositories:</p><ul>";
             data.slice(0, 10).forEach(repo => {
@@ -88,9 +88,9 @@ const commands = {
         } catch(err) { return `<p>Error fetching repos</p>`; }
     },
     stats: async function() {
-        const user = 'octocat'; // <-- Replace with your GitHub username
+        const levelbylevel = 'octocat'; // <-- Replace with your GitHub levelbylevelname
         try {
-            const res = await fetch(`https://api.github.com/users/${user}`);
+            const res = await fetch(`https://api.github.com/levelbylevels/${levelbylevel}`);
             const data = await res.json();
             return `<p>GitHub Stats:</p>
             <ul>
