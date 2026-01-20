@@ -3,129 +3,223 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hacker Terminal Portfolio</title>
+<title>levelbylevel | Hacker Terminal</title>
+
 <style>
-/* --- Basic Dark Terminal Theme --- */
 body {
     margin: 0;
     background: #000;
-    color: #0f0;
-    font-family: 'Courier New', monospace;
-    overflow-x: hidden;
+    color: #00ff88;
+    font-family: "Courier New", monospace;
+    user-select: none;
 }
+
 #terminal {
-    max-width: 800px;
+    max-width: 900px;
     margin: 40px auto;
     padding: 20px;
 }
+
+#output {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+p { margin: 4px 0; }
+
+.command { color: #00ffff; }
+
 input {
     background: transparent;
     border: none;
-    color: #0f0;
-    width: 100%;
-    font-family: monospace;
-    font-size: 1em;
     outline: none;
+    color: #00ff88;
+    font-family: inherit;
+    font-size: 1em;
+    width: 90%;
+    user-select: text;
 }
-#output p { margin: 4px 0; }
-span.command { color: #0ff; }
-a { color: #0ff; text-decoration: none; }
+
+a {
+    color: #00ffff;
+    text-decoration: none;
+}
+
 a:hover { text-decoration: underline; }
 
-/* --- Typing Animation --- */
-@keyframes blink { 50% { opacity: 0; } }
 .cursor {
     display: inline-block;
-    width: 10px;
-    background-color: #0f0;
-    margin-left: 2px;
+    width: 8px;
+    height: 16px;
+    background: #00ff88;
     animation: blink 1s infinite;
+    vertical-align: middle;
 }
 
-/* --- Smooth scrolling output --- */
-#output { max-height: 70vh; overflow-y: auto; padding-bottom: 10px; }
+@keyframes blink {
+    50% { opacity: 0; }
+}
 </style>
 </head>
+
 <body>
 
 <div id="terminal">
-    <p>> Welcome to Avi's Hacker Terminal</p>
-    <p>> Type <span class="command">help</span> to see available commands</p>
+    <div id="boot"></div>
+
     <div id="output"></div>
+
     <div>
-        <span>> </span><input type="text" id="commandInput" autofocus placeholder="Type command...">
+        <span>> </span>
+        <input id="commandInput" autocomplete="off" />
         <span class="cursor"></span>
     </div>
 </div>
 
 <script>
-// --- DOM References ---
-const input = document.getElementById('commandInput');
-const output = document.getElementById('output');
+const USERNAME = "levelbylevel"; // 🔒 remembered permanently
 
-// --- Command Data ---
+const input = document.getElementById("commandInput");
+const output = document.getElementById("output");
+const boot = document.getElementById("boot");
+
+let history = [];
+let historyIndex = -1;
+
+/* TYPEWRITER EFFECT */
+function typeLine(text, target, speed = 40) {
+    return new Promise(resolve => {
+        let i = 0;
+        const p = document.createElement("p");
+        target.appendChild(p);
+
+        const interval = setInterval(() => {
+            p.textContent += text[i];
+            i++;
+            if (i >= text.length) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, speed);
+    });
+}
+
+/* BOOT SEQUENCE */
+async function bootSequence() {
+    await typeLine("> Booting secure shell...", boot);
+    await typeLine("> Authenticating user...", boot);
+    await typeLine(`> User: ${USERNAME}`, boot);
+    await typeLine("> Access granted.", boot);
+    await typeLine("> Type 'help' to begin", boot);
+    input.focus();
+}
+bootSequence();
+
+/* COMMANDS */
 const commands = {
-    help: `Available commands:
-- about        : About me
-- github       : Show GitHub repos
-- stats        : GitHub stats (stars/followers)
-- contact      : Contact info
-- clear        : Clear terminal`,
-    about: "I'm Avi, a frontend hacker & JS enthusiast. I love sleek, interactive web projects.",
-    contact: "Email: avi@example.com | LinkedIn: https://linkedin.com/in/avi",
-    clear: function() { output.innerHTML = ''; return ''; },
-    github: async function() {
-        const levelbylevel = 'octocat'; // <-- Replace with your GitHub levelbylevelname
-        try {
-            const res = await fetch(`https://api.github.com/levelbylevels/${levelbylevel}/repos`);
-            const data = await res.json();
-            let list = "<p>GitHub Repositories:</p><ul>";
-            data.slice(0, 10).forEach(repo => {
-                list += `<li><a href="${repo.html_url}" target="_blank">${repo.name}</a> - ⭐ ${repo.stargazers_count}</li>`;
-            });
-            list += "</ul>";
-            return list;
-        } catch(err) { return `<p>Error fetching repos</p>`; }
+    help: `
+about
+github
+stats
+projects
+skills
+contact
+clear
+`,
+
+    about: `Developer alias: ${USERNAME}
+Frontend hacker.
+Dark UI. Clean code. No fluff.`,
+
+    skills: `
+HTML • CSS • JavaScript
+APIs • UI/UX • GitHub
+`,
+
+    projects: `
+• Hacker Terminal Portfolio
+• Dark Dashboards
+• API-Driven Web Apps
+`,
+
+    contact: `
+GitHub: https://github.com/${USERNAME}
+`,
+
+    clear: () => {
+        output.innerHTML = "";
+        return "";
     },
-    stats: async function() {
-        const levelbylevel = 'octocat'; // <-- Replace with your GitHub levelbylevelname
-        try {
-            const res = await fetch(`https://api.github.com/levelbylevels/${levelbylevel}`);
-            const data = await res.json();
-            return `<p>GitHub Stats:</p>
-            <ul>
-                <li>Followers: ${data.followers}</li>
-                <li>Following: ${data.following}</li>
-                <li>Public Repos: ${data.public_repos}</li>
-            </ul>`;
-        } catch(err) { return `<p>Error fetching stats</p>`; }
+
+    github: async () => {
+        const res = await fetch(`https://api.github.com/users/${USERNAME}/repos`);
+        const data = await res.json();
+
+        let html = "<p>Repositories:</p><ul>";
+        data.slice(0, 8).forEach(repo => {
+            html += `<li><a href="${repo.html_url}" target="_blank">${repo.name}</a> ⭐ ${repo.stargazers_count}</li>`;
+        });
+        html += "</ul>";
+        return html;
+    },
+
+    stats: async () => {
+        const res = await fetch(`https://api.github.com/users/${USERNAME}`);
+        const d = await res.json();
+
+        return `
+Followers: ${d.followers}
+Following: ${d.following}
+Public Repos: ${d.public_repos}
+`;
     }
 };
 
-// --- Command Handler ---
+/* RUN COMMAND */
 async function runCommand(cmd) {
-    cmd = cmd.trim().toLowerCase();
-    if(!cmd) return;
+    if (!cmd) return;
+
+    history.push(cmd);
+    historyIndex = history.length;
 
     output.innerHTML += `<p>> <span class="command">${cmd}</span></p>`;
-    if(commands[cmd]) {
+
+    if (commands[cmd]) {
         let result = commands[cmd];
-        if(typeof result === 'function') result = await result();
+        if (typeof result === "function") result = await result();
         output.innerHTML += `<p>${result}</p>`;
     } else {
-        output.innerHTML += `<p>Command not found. Type <span class="command">help</span></p>`;
+        output.innerHTML += `<p>Unknown command. Type <span class="command">help</span></p>`;
     }
 
-    input.value = '';
     output.scrollTop = output.scrollHeight;
+    input.value = "";
 }
 
-// --- Enter Key Event ---
-input.addEventListener('keydown', async (e) => {
-    if(e.key === 'Enter') {
-        await runCommand(input.value);
+/* INPUT HANDLING */
+input.addEventListener("keydown", async e => {
+    if (e.key === "Enter") {
+        await runCommand(input.value.trim().toLowerCase());
+    }
+
+    if (e.key === "ArrowUp") {
+        if (historyIndex > 0) historyIndex--;
+        input.value = history[historyIndex] || "";
+    }
+
+    if (e.key === "ArrowDown") {
+        if (historyIndex < history.length - 1) historyIndex++;
+        input.value = history[historyIndex] || "";
     }
 });
+
+/* ALWAYS FOCUS */
+document.addEventListener("click", () => input.focus());
+window.addEventListener("focus", () => input.focus());
+
+setInterval(() => {
+    if (document.activeElement !== input) input.focus();
+}, 400);
 </script>
 
 </body>
