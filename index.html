@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hacker Terminal Portfolio</title>
+<style>
+/* --- Basic Dark Terminal Theme --- */
+body {
+    margin: 0;
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    overflow-x: hidden;
+}
+#terminal {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+input {
+    background: transparent;
+    border: none;
+    color: #0f0;
+    width: 100%;
+    font-family: monospace;
+    font-size: 1em;
+    outline: none;
+}
+#output p { margin: 4px 0; }
+span.command { color: #0ff; }
+a { color: #0ff; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* --- Typing Animation --- */
+@keyframes blink { 50% { opacity: 0; } }
+.cursor {
+    display: inline-block;
+    width: 10px;
+    background-color: #0f0;
+    margin-left: 2px;
+    animation: blink 1s infinite;
+}
+
+/* --- Smooth scrolling output --- */
+#output { max-height: 70vh; overflow-y: auto; padding-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div id="terminal">
+    <p>> Welcome to Avi's Hacker Terminal</p>
+    <p>> Type <span class="command">help</span> to see available commands</p>
+    <div id="output"></div>
+    <div>
+        <span>> </span><input type="text" id="commandInput" autofocus placeholder="Type command...">
+        <span class="cursor"></span>
+    </div>
+</div>
+
+<script>
+// --- DOM References ---
+const input = document.getElementById('commandInput');
+const output = document.getElementById('output');
+
+// --- Command Data ---
+const commands = {
+    help: `Available commands:
+- about        : About me
+- github       : Show GitHub repos
+- stats        : GitHub stats (stars/followers)
+- contact      : Contact info
+- clear        : Clear terminal`,
+    about: "I'm Avi, a frontend hacker & JS enthusiast. I love sleek, interactive web projects.",
+    contact: "Email: avi@example.com | LinkedIn: https://linkedin.com/in/avi",
+    clear: function() { output.innerHTML = ''; return ''; },
+    github: async function() {
+        const user = 'octocat'; // <-- Replace with your GitHub username
+        try {
+            const res = await fetch(`https://api.github.com/users/${user}/repos`);
+            const data = await res.json();
+            let list = "<p>GitHub Repositories:</p><ul>";
+            data.slice(0, 10).forEach(repo => {
+                list += `<li><a href="${repo.html_url}" target="_blank">${repo.name}</a> - ⭐ ${repo.stargazers_count}</li>`;
+            });
+            list += "</ul>";
+            return list;
+        } catch(err) { return `<p>Error fetching repos</p>`; }
+    },
+    stats: async function() {
+        const user = 'octocat'; // <-- Replace with your GitHub username
+        try {
+            const res = await fetch(`https://api.github.com/users/${user}`);
+            const data = await res.json();
+            return `<p>GitHub Stats:</p>
+            <ul>
+                <li>Followers: ${data.followers}</li>
+                <li>Following: ${data.following}</li>
+                <li>Public Repos: ${data.public_repos}</li>
+            </ul>`;
+        } catch(err) { return `<p>Error fetching stats</p>`; }
+    }
+};
+
+// --- Command Handler ---
+async function runCommand(cmd) {
+    cmd = cmd.trim().toLowerCase();
+    if(!cmd) return;
+
+    output.innerHTML += `<p>> <span class="command">${cmd}</span></p>`;
+    if(commands[cmd]) {
+        let result = commands[cmd];
+        if(typeof result === 'function') result = await result();
+        output.innerHTML += `<p>${result}</p>`;
+    } else {
+        output.innerHTML += `<p>Command not found. Type <span class="command">help</span></p>`;
+    }
+
+    input.value = '';
+    output.scrollTop = output.scrollHeight;
+}
+
+// --- Enter Key Event ---
+input.addEventListener('keydown', async (e) => {
+    if(e.key === 'Enter') {
+        await runCommand(input.value);
+    }
+});
+</script>
+
+</body>
+</html>
